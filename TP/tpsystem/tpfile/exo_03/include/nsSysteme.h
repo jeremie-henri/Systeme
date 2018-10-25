@@ -1,111 +1,103 @@
 /**
  *
- * @File : CExc.h
- * @Author : A. B. Dragut 2011
+ * @File : nsSysteme.h
+ * 2011
+ * @Synopsis : espace de noms qui contient les prototypes des wrappers
+ *             des fonctions systeme
  *
- * @Synopsis : La classe des exceptions systemes
  *
  **/
-#if !defined __CEXC_H__
-#define      __CEXC_H__
+#if !defined __NSSYSTEME_H__
+#define      __NSSYSTEME_H__
 
-#include <exception>
-#include <string>
-#include <iostream>
-#include <cerrno>
+#include <cstddef>        // size_t
+
+#include <sys/types.h>    // ssize_t
+                                                    
+#include <sys/stat.h>     // struct stat, stat(), fstat()
+#include <unistd.h>
+
 #include "string.h"
 
-//===============================
-// Declaration de la Classe CExc
-//===============================
+#include "CExc.h"
+
+//  Declarations des fonctions concernant les fichiers
+//  =========================================================
+
 namespace nsSysteme
 {
-    class CExc	: public std::exception
-    {
-      protected :
-	  std::string m_info;
-	  std::string m_nomf;
-	  int         m_descrfic;
-          bool        m_qdescrfic;
-          int         m_errnoval;
-   	  std::string m_strerrorval;
-      protected :
-	  std::ostream & _Edit (std::ostream & os) const;
-	  
-      public :
-	  CExc (const std::string & NomFonction, 
-		const std::string & Info) throw ();
-	  CExc (const std::string & NomFonction,
-		int                 Descrfic) throw ();
-	  virtual ~CExc (void)                            throw ();
-	  friend std::ostream & operator << (std::ostream & os, 
-                                           const CExc & Item);
-   
-	  
-    
-    }; // CExc
-    std::ostream & operator << (std::ostream & os, 
-                                const CExc & Item);
-   
+   void        Stat    (const char * file_name, struct stat * buf)
+                             throw (CExc);
+
+    void        Close  (int fd)
+                             throw (CExc);
+
+    std::size_t Write(int fd, const void *buf, size_t count);
+
+    int         Open   (const char * pathname, int flags)
+                             throw (CExc);
+    int         Open   (const char * pathname, int flags, ::mode_t mode)
+                             throw (CExc);
+    std::size_t Read   (int fd, void * buf, std::size_t count)
+                             throw (CExc);
+
+    void        Stat   (const char * file_name, struct stat * buf)
+                             throw (CExc);
+
+      
 } // nsSysteme
-    
 
-//=============================
-// Definition de la Classe CExc
-//=============================
+namespace nsFctShell {
+ 
+   void FileCopy (const char * const Destination,  
+                  const char * const Source, 
+                  const size_t NbBytes) 
+                  throw (nsSysteme::CExc);
 
-#define CEX nsSysteme::CExc
-//
-// avec inline on peut introduire dans les .h des definitions courtes
-//
-inline 
-CEX::CExc 
-(const std::string & NomFonction,
- const std::string & Info) throw ()
-    : m_info (Info), m_nomf(NomFonction), m_descrfic(-1), m_qdescrfic(false), 
-      m_errnoval(errno),   m_strerrorval(strerror(errno))   {}
-
-inline 
-CEX::CExc 
-(const std::string & NomFonction,
- int Descrfic) throw ()
-    : m_nomf(NomFonction), m_descrfic (Descrfic), m_qdescrfic(true), 
-      m_errnoval(errno),   m_strerrorval(strerror(errno)) {}
-
-inline CEX::~CExc (void) throw () {} 
+} // nsFctShell
 
 
+//  Definitions courtes des fonctions concernant les fichiers
+//  =========================================================
 
-inline 
-std::ostream & CEX::_Edit (std::ostream & os) const
+inline
+void nsSysteme::Stat (const char * file_name, struct stat * buf)
+    throw (CExc)
 {
-    os<<"\nNom de la fonction : " <<m_nomf
-      <<"\nNo. erreur systeme:"<< m_errnoval
-      <<"\ni.e.:"<<std::string("  ")+ m_strerrorval
-      <<"\nParametres au moment de l'erreur"
-      <<"\n";
-    if(m_qdescrfic) {
-	os<<"descripteur fichier: "<<m_descrfic;
-    }
-    else {
-	os<<m_info;
-    }
-    os << "\n";
-    return os;
+    if (::stat (file_name, buf))
+        throw CExc ("stat()", std::string("fichier :")+ file_name);
 
-} // _Edit()
+} // Stat()
 
-#undef CEX
+inline void nsSysteme::Close (int fd) throw (CExc)
+{
+    if (::close (fd)) throw CExc ("close()", fd);
+
+} // Close()
 
 inline 
-std::ostream & nsSysteme::operator << (std::ostream & os, 
-                                    const CExc & Item)
+std::size_t nsSysteme::Read (int fd, void * buf, std::size_t count)
+    throw (CExc)
 {
-    return Item._Edit (os);
+    ::ssize_t Res;
+    if (-1 == (Res = ::read (fd, buf, count)))
+        throw CExc ("read()", fd);
 
-} // operator <<
+    return Res;
+
+} // Read()
+
+inline
+std::size_t nsSysteme::Write(int fd, const void *buf, std::size_t count)
+ 	throw (CExc)
+{
+	::ssize_t Res;
+	if (-1 == (Res = ::write (fd, buf, count)))
+		throw CExc ("write()", fd);
+
+	return Res;
+	
+}
 
 
-
-
-#endif    /* __CEXC_H__ */
+#endif    /* __NSSYSTEME_H__ */
