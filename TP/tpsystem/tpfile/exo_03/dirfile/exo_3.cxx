@@ -22,6 +22,25 @@
 using namespace nsSysteme;  // Stat()
 using namespace std;
 
+namespace {
+  std::size_t donneTailleOctet(const string &comment, const string &nomFic) {
+    if(comment == "char") return 1;
+    if(comment == "all") {
+      struct stat S;
+      Stat (nomFic . c_str(), & S);
+      return S.st_size;
+    }
+    if(comment == "block") {
+      struct stat S;
+      Stat (nomFic . c_str(), & S);
+      return S.st_blksize;
+    }
+    if(comment == "diskBlock") {
+      return S_BLKSIZE;
+    }
+    throw CExc("donneTaille()", string("mauvais choix ") + comment);
+  }
+}
 
 int main (int argc, char * argv [])
 {

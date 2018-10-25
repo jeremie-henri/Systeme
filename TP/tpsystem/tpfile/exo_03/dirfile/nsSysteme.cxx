@@ -50,19 +50,9 @@ void nsFctShell::FileCopy (const char * const Destination,
                            const char * const Source, const size_t NbBytes)
                                              throw (nsSysteme::CExc)
 {
-	fdSource = nsSysteme::Open(Source,O_RDONLY);
-	dfDest = nsSysteme::Open(Destination,O_CREAT | O_TRUNC | O_WRONLY );
-	char Tampon [NbBytes+1];
-	
-	for (; nsSysteme::Write (fdDest, Tampon, nsSysteme::Read (fdSource, Tampon, NbBytes)); );
-
-    nsSysteme::Close (fdSource);
-    nsSysteme::Close (fdDest);
-
-
-	
-
+    //a ecrire    
+    //il faut utiliser nsSysteme::Open, nsSysteme::Close, etc... parce que 
+    // nous sommes dans ici nsFctShell
 
 } // FileCopy()
-
 
